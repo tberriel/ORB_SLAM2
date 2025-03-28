@@ -15,7 +15,7 @@ static void init_ar() {
     Py_Initialize();
 
     import_array();
-    return NUMPY_IMPORT_ARRAY_RETVAL;
+    return NULL;
 }
 
 BOOST_PYTHON_MODULE(orbslam2)
@@ -320,6 +320,8 @@ boost::python::list ORBSlamPython::getTrackedMappoints() const
     
     boost::python::list map_points;
     for(size_t i=0; i<Mps.size(); i++)    {
+        if (Mps[i] != NULL)
+        {
         cv::Mat wp = Mps[i]->GetWorldPos();
         map_points.append(boost::python::make_tuple(
             wp.at<float>(0,0),
@@ -327,8 +329,9 @@ boost::python::list ORBSlamPython::getTrackedMappoints() const
             wp.at<float>(2,0)                          
             ));
         }
+    }
 
-        return map_points;
+    return map_points;
 }
 
 boost::python::list ORBSlamPython::getTrajectoryPoints() const
