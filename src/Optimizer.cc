@@ -513,6 +513,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
 
     g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
     optimizer.setAlgorithm(solver);
+    optimizer.setVerbose(false);
 
     if(pbStopFlag)
         optimizer.setForceStopFlag(pbStopFlag);

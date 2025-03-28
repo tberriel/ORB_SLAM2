@@ -9,40 +9,49 @@ MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3 -march=native")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 
-# Check C++11 or C++0x support
+# Check c++17 or C++0x support
 include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-   add_definitions(-DCOMPILEDWITHC11)
-   message(STATUS "Using flag -std=c++11.")
+if(COMPILER_SUPPORTS_CXX17)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+   add_definitions(-DCOMPILEDWITHC17)
+   message(STATUS "Using flag -std=c++17.")
 elseif(COMPILER_SUPPORTS_CXX0X)
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
    add_definitions(-DCOMPILEDWITHC0X)
    message(STATUS "Using flag -std=c++0x.")
 else()
-   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no c++17 support. Please use a different C++ compiler.")
 endif()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
-find_package(OpenCV 3.0 QUIET)
+find_package(OpenCV 4.2 QUIET)
 if(NOT OpenCV_FOUND)
-   find_package(OpenCV 2.4.3 QUIET)
-   if(NOT OpenCV_FOUND)
-      message(FATAL_ERROR "OpenCV > 2.4.3 not found.")
-   endif()
+    message(FATAL_ERROR "OpenCV = 4.2 not found.")
 endif()
 
-find_package(Eigen3 3.1.0 REQUIRED)
+message(STATUS "OpenCV DIR:  ${OpenCV_DIR}")
+message(STATUS "OpenCV library status:")
+message(STATUS "    version: ${OpenCV_VERSION}")
+message(STATUS "    libraries: ${OpenCV_LIBS}")
+message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+
+find_package(Eigen3 3.3.7 REQUIRED NO_MODULE)
 find_package(Pangolin REQUIRED)
+
+message(STATUS "Pangolin library status:")
+message(STATUS "    version: ${Pangolin_VERSION}")
+message(STATUS "    libraries: ${Pangolin_LIBS}")
+message(STATUS "    include path: ${Pangolin_INCLUDE_DIRS}")
 
 include_directories(
 ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
-${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
 )
 
@@ -86,28 +95,27 @@ add_executable(rgbd_tum
 Examples/RGB-D/rgbd_tum.cc)
 target_link_libraries(rgbd_tum ${PROJECT_NAME})
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
+# ---------------
+# Installation instructions.
+# Will install to CMAKE_INSTALL_PREFIX
+# This defaults to /usr/local/, specify -DCMAKE_INSTALL_PREFIX when calling cmake to specify an alternate location
+# e.g. cmake -DCMAKE_INSTALL_PREFIX="~/local"
+# ---------------
 
-add_executable(stereo_kitti
-Examples/Stereo/stereo_kitti.cc)
-target_link_libraries(stereo_kitti ${PROJECT_NAME})
-
-add_executable(stereo_euroc
-Examples/Stereo/stereo_euroc.cc)
-target_link_libraries(stereo_euroc ${PROJECT_NAME})
-
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
-
-add_executable(mono_tum
-Examples/Monocular/mono_tum.cc)
-target_link_libraries(mono_tum ${PROJECT_NAME})
-
-add_executable(mono_kitti
-Examples/Monocular/mono_kitti.cc)
-target_link_libraries(mono_kitti ${PROJECT_NAME})
-
-add_executable(mono_euroc
-Examples/Monocular/mono_euroc.cc)
-target_link_libraries(mono_euroc ${PROJECT_NAME})
-
+install(TARGETS ${PROJECT_NAME}
+    DESTINATION  lib
+    COMPONENT library)
+install(FILES
+        ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
+        ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+    DESTINATION lib
+    COMPONENT library)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+    DESTINATION include/ORB_SLAM2
+    COMPONENT library
+    FILES_MATCHING PATTERN "*.h"
+    PATTERN "Thirdparty" EXCLUDE)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/Thirdparty/
+    DESTINATION include/ORB_SLAM2/Thirdparty
+    COMPONENT library
+FILES_MATCHING REGEX ".*\\.h(pp)?")

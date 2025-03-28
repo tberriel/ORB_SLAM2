@@ -74,11 +74,21 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
         DistCoef.resize(5);
         DistCoef.at<float>(4) = k3;
     }
+    const float k4 = fSettings["Camera.k4"];
+    const float k5 = fSettings["Camera.k5"];
+    const float k6 = fSettings["Camera.k6"];
+    if (k4 != 0 || k5 != 0 || k6 != 0) {
+        DistCoef.resize(8);
+        DistCoef.at<float>(5) = k4;
+        DistCoef.at<float>(6) = k5;
+        DistCoef.at<float>(7) = k6;
+    }
     DistCoef.copyTo(mDistCoef);
 
     mbf = fSettings["Camera.bf"];
 
-    float fps = fSettings["Camera.fps"];
+    float fps = 0;
+    fps = fSettings["Camera.fps"];
     if(fps==0)
         fps=30;
 
@@ -95,6 +105,12 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     cout << "- k2: " << DistCoef.at<float>(1) << endl;
     if(DistCoef.rows==5)
         cout << "- k3: " << DistCoef.at<float>(4) << endl;
+    if (DistCoef.rows == 8) {
+        cout << "- k3: " << DistCoef.at<float>(4) << endl;
+        cout << "- k4: " << DistCoef.at<float>(5) << endl;
+        cout << "- k5: " << DistCoef.at<float>(6) << endl;
+        cout << "- k6: " << DistCoef.at<float>(7) << endl;
+    }
     cout << "- p1: " << DistCoef.at<float>(2) << endl;
     cout << "- p2: " << DistCoef.at<float>(3) << endl;
     cout << "- fps: " << fps << endl;
@@ -173,26 +189,26 @@ cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRe
     {
         if(mbRGB)
         {
-            cvtColor(mImGray,mImGray,CV_RGB2GRAY);
-            cvtColor(imGrayRight,imGrayRight,CV_RGB2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_RGB2GRAY);
+            cvtColor(imGrayRight,imGrayRight,cv::COLOR_RGB2GRAY);
         }
         else
         {
-            cvtColor(mImGray,mImGray,CV_BGR2GRAY);
-            cvtColor(imGrayRight,imGrayRight,CV_BGR2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_BGR2GRAY);
+            cvtColor(imGrayRight,imGrayRight,cv::COLOR_BGR2GRAY);
         }
     }
     else if(mImGray.channels()==4)
     {
         if(mbRGB)
         {
-            cvtColor(mImGray,mImGray,CV_RGBA2GRAY);
-            cvtColor(imGrayRight,imGrayRight,CV_RGBA2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_RGBA2GRAY);
+            cvtColor(imGrayRight,imGrayRight,cv::COLOR_RGBA2GRAY);
         }
         else
         {
-            cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
-            cvtColor(imGrayRight,imGrayRight,CV_BGRA2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_BGRA2GRAY);
+            cvtColor(imGrayRight,imGrayRight,cv::COLOR_BGRA2GRAY);
         }
     }
 
@@ -212,16 +228,16 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
     if(mImGray.channels()==3)
     {
         if(mbRGB)
-            cvtColor(mImGray,mImGray,CV_RGB2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_RGB2GRAY);
         else
-            cvtColor(mImGray,mImGray,CV_BGR2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_BGR2GRAY);
     }
     else if(mImGray.channels()==4)
     {
         if(mbRGB)
-            cvtColor(mImGray,mImGray,CV_RGBA2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_RGBA2GRAY);
         else
-            cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_BGRA2GRAY);
     }
 
     if((fabs(mDepthMapFactor-1.0f)>1e-5) || imDepth.type()!=CV_32F)
@@ -242,16 +258,16 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
     if(mImGray.channels()==3)
     {
         if(mbRGB)
-            cvtColor(mImGray,mImGray,CV_RGB2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_RGB2GRAY);
         else
-            cvtColor(mImGray,mImGray,CV_BGR2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_BGR2GRAY);
     }
     else if(mImGray.channels()==4)
     {
         if(mbRGB)
-            cvtColor(mImGray,mImGray,CV_RGBA2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_RGBA2GRAY);
         else
-            cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
+            cvtColor(mImGray,mImGray,cv::COLOR_BGRA2GRAY);
     }
 
     if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
@@ -399,6 +415,9 @@ void Tracking::Track()
         {
             if(bOK)
                 bOK = TrackLocalMap();
+                if (!bOK) {
+                    std::cout << "track localmap: " << mCurrentFrame.mnId << " failed" << std::endl;
+                }
         }
         else
         {
@@ -1574,6 +1593,15 @@ void Tracking::ChangeCalibration(const string &strSettingPath)
     {
         DistCoef.resize(5);
         DistCoef.at<float>(4) = k3;
+    }
+    const float k4 = fSettings["Camera.k4"];
+    const float k5 = fSettings["Camera.k5"];
+    const float k6 = fSettings["Camera.k6"];
+    if (k4 != 0 || k5 != 0 || k6 != 0) {
+        DistCoef.resize(8);
+        DistCoef.at<float>(5) = k4;
+        DistCoef.at<float>(6) = k5;
+        DistCoef.at<float>(7) = k6;
     }
     DistCoef.copyTo(mDistCoef);
 

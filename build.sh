@@ -1,9 +1,13 @@
+opencv_dir=$1
+install_path=$2
+pangolin_dir=$3
+
 echo "Configuring and building Thirdparty/DBoW2 ..."
 
 cd Thirdparty/DBoW2
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMAKE_BUILD_TYPE=Release -DOpenCV_DIR=${opencv_dir}
 make -j
 
 cd ../../g2o
@@ -27,5 +31,8 @@ echo "Configuring and building ORB_SLAM2 ..."
 
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMAKE_BUILD_TYPE=Release \
+         -DOpenCV_DIR=${opencv_dir} \
+         -DPangolin_DIR=${pangolin_dir} \
+         -DCMAKE_INSTALL_PREFIX=${install_path}
 make -j
