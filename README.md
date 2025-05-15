@@ -26,7 +26,7 @@ This repo has been tested with **Ubuntu 20.04**.
 
 Clone the repository:
 ```
-git clone https://github.com/tberriel/ORB_SLAM2_w_conda.git
+git clone https://github.com/tberriel/ORB_SLAM2.git
 ```
 
 Install the conda environment from env.yml:
