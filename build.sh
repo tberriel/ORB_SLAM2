@@ -1,26 +1,22 @@
-opencv_dir=$1
-install_path=$2
-pangolin_dir=$3
+install_path=$1
 
 echo "Configuring and building Thirdparty/DBoW2 ..."
 
 cd Thirdparty/DBoW2
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DOpenCV_DIR=${opencv_dir}
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release 
 make -j
+cd ../../
 
-cd ../../g2o
-
+cd g2o
 echo "Configuring and building Thirdparty/g2o ..."
 
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release 
 make -j
 
-cd ../../../
-
+cd ../../
+cd ../
 echo "Uncompress vocabulary ..."
 
 cd Vocabulary
@@ -29,10 +25,7 @@ cd ..
 
 echo "Configuring and building ORB_SLAM2 ..."
 
-mkdir build
-cd build
+mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release \
-         -DOpenCV_DIR=${opencv_dir} \
-         -DPangolin_DIR=${pangolin_dir} \
          -DCMAKE_INSTALL_PREFIX=${install_path}
-make -j
+make install -j
