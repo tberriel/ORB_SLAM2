@@ -1,10 +1,10 @@
 #define PY_ARRAY_UNIQUE_SYMBOL pbcvt_ARRAY_API
 #include <opencv2/core/core.hpp>
-#include <pyboostcvconverter/pyboostcvconverter.hpp>
-#include <ORB_SLAM2/KeyFrame.h>
-#include <ORB_SLAM2/Converter.h>
-#include <ORB_SLAM2/Tracking.h>
-#include <ORB_SLAM2/MapPoint.h>
+#include <pyboostcvconverter.hpp>
+#include <KeyFrame.h>
+#include <Converter.h>
+#include <Tracking.h>
+#include <MapPoint.h>
 #include "ORBSlamPython.h"
 
 #if (PY_VERSION_HEX >= 0x03000000)
@@ -316,7 +316,8 @@ boost::python::list ORBSlamPython::getTrackedMappoints() const
     }
     
     // This is copied from the ORB_SLAM2 System.SaveTrajectoryKITTI function, with some changes to output a python tuple.
-    vector<ORB_SLAM2::MapPoint*> Mps = system->GetTrackedMapPoints();
+    vector<ORB_SLAM2::MapPoint*> Mps = system->GetTrackedMapPoints();// This call only get map points of current frame.
+    // vector<ORB_SLAM2::MapPoint*> vpMPs = system->mpMap->GetAllMapPoints(); We should call this function to get the full maps, but this would require to modify ORB_SLAM::System to somhow get acces to mpMap ot mpMap->GetAllMapPoints
     
     boost::python::list map_points;
     for(size_t i=0; i<Mps.size(); i++)    {

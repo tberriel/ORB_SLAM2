@@ -4,8 +4,8 @@
 #include <memory>
 #include <Python.h>
 #include <boost/python.hpp>
-#include <ORB_SLAM2/System.h>
-#include <ORB_SLAM2/Tracking.h>
+#include <System.h>
+#include <Tracking.h>
 
 class ORBSlamPython
 {

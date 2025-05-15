@@ -1,78 +1,39 @@
-cmake_minimum_required(VERSION 2.8)
-project(ORB_SLAM2_PYTHON_BINDING)
+# CMakeLists.txt for ORB_SLAM2 Python Bindings (as a subdirectory)
 
-IF(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE Release)
-ENDIF()
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules)
 
-MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
-
-LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3 -march=native")
-
-# Check C++17 or C++0x support
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX17)
-   message("CXX17")
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-   add_definitions(-DCOMPILEDWITHC17)
-   message(STATUS "Using flag -std=c++17.")
-elseif(COMPILER_SUPPORTS_CXX0X)
-   message("CXX14")
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-   add_definitions(-DCOMPILEDWITHC0X)
-   message(STATUS "Using flag -std=c++0x.")
-else()
-   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++17 support. Please use a different C++ compiler.")
-endif()
-
-#find_package(PythonLibs 3.10 REQUIRED)
-find_package(NumPy)
-#find_package(Boost 1.80.0 REQUIRED)
-find_package(OpenCV 4.2)
-find_package(Eigen3 3.3.7 REQUIRED)
-#find_package(ORB_SLAM2 REQUIRED)
-find_package(Pangolin REQUIRED)
+find_package(NumPy REQUIRED)
+find_package(PythonLibs 3.10 REQUIRED)
+find_package(Boost 1.80.0 REQUIRED COMPONENTS python310)
 
 # RPATH fiddling for the library, so that the installed version can find the linked libraries
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-include_directories(
-${PROJECT_SOURCE_DIR}/src
-${ORB_SLAM2_INCLUDE_DIR}
+set(TARGET_MODULE_NAME orbslam2)
+add_library(${TARGET_MODULE_NAME} SHARED
+src/ORBSlamPython.cpp
+src/pyboost_cv4_converter.cpp)
+
+target_include_directories(${TARGET_MODULE_NAME} PRIVATE
+${CMAKE_CURRENT_SOURCE_DIR}/include
 ${Boost_INCLUDE_DIRS}
 ${EIGEN3_INCLUDE_DIR}
 ${PYTHON_INCLUDE_DIRS}
 ${PYTHON_NUMPY_INCLUDE_DIR}
+${Pangolin_INCLUDE_DIRS}
+${OpenCV_INCLUDE_DIRS} 
 )
-if (Pangolin_FOUND)
-  include_directories(${Pangolin_INCLUDE_DIRS})
-endif()
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-
-set(TARGET_MODULE_NAME orbslam2)
-add_library(${TARGET_MODULE_NAME} SHARED
-src/ORBSlamPython.cpp
-src/pyboost_cv2_converter.cpp
-src/pyboost_cv3_converter.cpp)
 set_target_properties(${TARGET_MODULE_NAME} PROPERTIES PREFIX "")
 
 target_link_libraries(${TARGET_MODULE_NAME} 
-${ORB_SLAM2_LIBRARIES}
+${PROJECT_NAME}
 ${OpenCV_LIBS}
 ${EIGEN3_LIBS}
 ${Boost_LIBRARIES}
 ${PYTHON_LIBRARIES}
+${Pangolin_LIBRARIES}
 )
-#if (Pangolin_FOUND)
-#  target_link_libraries(${TARGET_MODULE_NAME} ${Pangolin_LIBRARIES})
-#endif()
 
-install(TARGETS ${TARGET_MODULE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX})
-
+install(TARGETS ${TARGET_MODULE_NAME} 
+        DESTINATION lib/python3.10/site-packages)
+        
