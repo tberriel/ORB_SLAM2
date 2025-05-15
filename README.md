@@ -31,7 +31,7 @@ git clone https://github.com/tberriel/ORB_SLAM2.git
 
 Install the conda environment from env.yml:
 ```
-cd ORB_SLAM2_w_conda
+cd ORB_SLAM2
 conda env create -n orbslam2 -f env.yml
 ```
 And then run the script `build.sh` to build the *Thirdparty* libraries and *ORB-SLAM2* creating the python bindings.
