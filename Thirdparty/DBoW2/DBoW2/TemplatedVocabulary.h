@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <opencv2/core/core.hpp>
 #include <limits>
+#include <locale> 
 
 #include "FeatureVector.h"
 #include "BowVector.h"
@@ -1337,6 +1338,17 @@ int TemplatedVocabulary<TDescriptor,F>::stopWords(double minWeight)
 template<class TDescriptor, class F>
 bool TemplatedVocabulary<TDescriptor,F>::loadFromTextFile(const std::string &filename)
 {
+
+    // Temporarily set locale to "C" for robust vocabulary parsing
+    std::locale original_locale;
+    bool locale_changed_for_vocab = false;
+    try {
+        original_locale = std::locale::global(std::locale("C"));
+        locale_changed_for_vocab = true;
+    } catch (const std::runtime_error& e) {
+        cerr << "[DBoW2::System WARNING] VocabLoad: Failed to set C++ locale to 'C': " << e.what() << endl;
+    }
+
     ifstream f;
     f.open(filename.c_str());
 	
@@ -1416,6 +1428,16 @@ bool TemplatedVocabulary<TDescriptor,F>::loadFromTextFile(const std::string &fil
         else
         {
             m_nodes[nid].children.reserve(m_k);
+        }
+    }
+
+
+    // Restore original locale
+    if (locale_changed_for_vocab) {
+        try {
+            std::locale::global(original_locale);
+        } catch (const std::runtime_error& e) {
+            cerr << "[DBoW2::System WARNING] VocabLoad: Failed to restore original C++ locale: " << e.what() << endl;
         }
     }
 
