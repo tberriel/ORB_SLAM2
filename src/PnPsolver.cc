@@ -397,7 +397,7 @@ void PnPsolver::choose_control_points(void)
       PW0.at<double>(3 * i + j) = pws[3 * i + j] - cws[0][j];
 
   cv::mulTransposed(PW0, PW0tPW0, 1);
-  cv::SVD::compute(PW0tPW0, DC, UCt, cv::Mat(), cv::SVD::MODIFY_A | cv::SVD::NO_UV);
+  cv::SVD::compute(PW0tPW0, DC, UCt, cv::Mat(), cv::SVD::MODIFY_A);
 
   for(int i = 1; i < 4; i++) {
     double k = sqrt(dc[i - 1] / number_of_correspondences);
@@ -488,7 +488,7 @@ double PnPsolver::compute_pose(double R[3][3], double t[3])
   cv::Mat Ut  = cv::Mat(12, 12, CV_64F, ut);
 
   cv::mulTransposed(M, MtM, 1);
-  cv::SVD::compute(MtM, D, Ut, cv::Mat(), cv::SVD::MODIFY_A | cv::SVD::NO_UV);
+  cv::SVD::compute(MtM, D, Ut, cv::Mat(), cv::SVD::MODIFY_A);
 
   double l_6x10[6 * 10], rho[6];
   cv::Mat L_6x10 = cv::Mat(6, 10, CV_64F, l_6x10);
@@ -740,7 +740,7 @@ void PnPsolver::find_betas_approx_3(const cv::Mat * L_6x10, const cv::Mat * Rho,
     L_6x5.at<double>(i, 4) = L_6x10->at<double>(i, 4);
   }
 
-  cv::solve(L_6x5, *Rho, B5, cv::SVD::NO_UV);
+  cv::solve(L_6x5, *Rho, B5, cv::DECOMP_SVD);
 
   if (b5[0] < 0) {
     betas[0] = sqrt(-b5[0]);
