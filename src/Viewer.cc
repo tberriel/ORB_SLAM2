@@ -58,6 +58,7 @@ void Viewer::Run()
 
     pangolin::CreateWindowAndBind("ORB-SLAM2: Map Viewer",1024,768);
 
+
     // 3D Mouse handler requires depth testing to be enabled
     glEnable(GL_DEPTH_TEST);
 
@@ -165,6 +166,8 @@ void Viewer::Run()
             break;
     }
 
+    pangolin::Quit();
+    cv::destroyWindow("ORB-SLAM2: Current Frame");
     SetFinish();
 }
 
