@@ -1,0 +1,4 @@
+# Pre-canned types
+ADD_SUBDIRECTORY(slam3d)
+ADD_SUBDIRECTORY(sba)
+ADD_SUBDIRECTORY(sim3)
