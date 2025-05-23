@@ -387,22 +387,23 @@ void PnPsolver::choose_control_points(void)
   // Take C1, C2, and C3 from PCA on the reference points:
   cv::Mat PW0 = cv::Mat(number_of_correspondences, 3, CV_64F);
 
-  double pw0tpw0[3 * 3], dc[3], uct[3 * 3];
+  double pw0tpw0[3 * 3], dc[3], uc_temp[3 * 3], v[3*3];
   cv::Mat PW0tPW0 = cv::Mat(3, 3, CV_64F, pw0tpw0);
   cv::Mat DC      = cv::Mat(3, 1, CV_64F, dc);
-  cv::Mat UCt     = cv::Mat(3, 3, CV_64F, uct);
+  cv::Mat UC     = cv::Mat(3, 3, CV_64F, uc_temp);
+  cv::Mat VC     = cv::Mat(3, 3, CV_64F, vc);
 
   for(int i = 0; i < number_of_correspondences; i++)
     for(int j = 0; j < 3; j++)
-      PW0.at<double>(3 * i + j) = pws[3 * i + j] - cws[0][j];
+      PW0.at<double>(i, j) = pws[3 * i + j] - cws[0][j];
 
-  cv::mulTransposed(PW0, PW0tPW0, 1);
-  cv::SVD::compute(PW0tPW0, DC, UCt, cv::Mat(), cv::SVD::MODIFY_A);
+  cv::mulTransposed(PW0, PW0tPW0, true);
+  cv::SVD::compute(PW0tPW0, DC, UC, VC);
 
   for(int i = 1; i < 4; i++) {
-    double k = sqrt(dc[i - 1] / number_of_correspondences);
+    double k = sqrt(DC.at<double>(i - 1, 0) / number_of_correspondences);
     for(int j = 0; j < 3; j++)
-      cws[i][j] = cws[0][j] + k * uct[3 * (i - 1) + j];
+      cws[i][j] = cws[0][j] + k * UC.at<double>(j, i - 1);
   }
 }
 
@@ -434,8 +435,8 @@ void PnPsolver::compute_barycentric_coordinates(void)
 void PnPsolver::fill_M(cv::Mat * M,
 		  const int row, const double * as, const double u, const double v)
 {
-  double * M1 = M->ptr<double>(row * 12);
-  double * M2 = M1 + 12;
+  double * M1 = M->ptr<double>(row);     // Correct: pointer to the 'row'-th row
+  double * M2 = M->ptr<double>(row + 1); // Correct: pointer to the '(row+1)'-th row
 
   for(int i = 0; i < 4; i++) {
     M1[3 * i    ] = as[i] * fu;
@@ -482,18 +483,24 @@ double PnPsolver::compute_pose(double R[3][3], double t[3])
   for(int i = 0; i < number_of_correspondences; i++)
     fill_M(&M, 2 * i, alphas + 4 * i, us[2 * i], us[2 * i + 1]);
 
-  double mtm[12 * 12], d[12], ut[12 * 12];
+  double mtm[12 * 12], d[12], u[12 * 12], ut[12 * 12], v[12*12];
   cv::Mat MtM = cv::Mat(12, 12, CV_64F, mtm);
   cv::Mat D   = cv::Mat(12,  1, CV_64F, d);
-  cv::Mat Ut  = cv::Mat(12, 12, CV_64F, ut);
+  cv::Mat U  = cv::Mat(12, 12, CV_64F, u);
+  cv::Mat V  = cv::Mat(12, 12, CV_64F, v);
 
   cv::mulTransposed(M, MtM, 1);
-  cv::SVD::compute(MtM, D, Ut, cv::Mat(), cv::SVD::MODIFY_A);
+  cv::SVD::compute(MtM, D, U, V);
 
   double l_6x10[6 * 10], rho[6];
   cv::Mat L_6x10 = cv::Mat(6, 10, CV_64F, l_6x10);
   cv::Mat Rho    = cv::Mat(6,  1, CV_64F, rho);
 
+  for (int i = 0; i < 12; i++){
+    for (int j = 0; j < 12; j++)
+      ut[j*12 + i] = u[i*12 + j];
+  }
+  
   compute_L_6x10(ut, l_6x10);
   compute_rho(rho);
 
